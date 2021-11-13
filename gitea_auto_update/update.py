@@ -62,14 +62,18 @@ class Update:
         current_version = version.get_current_version()
         # Check if there is a new version
         if gitea_auto_update.lib.version.check_version(self.github_version, current_version):
-            logging.info('Update: new version available, stopping service')
-            os.system("systemctl stop gitea.service")
+            if self.config.get('Gitea', 'stopCommand'):
+                stopCommand = self.config.get('Gitea', 'stopCommand')
+                logging.info('Update: new version available, stopping gitea service via %s', stopCommand)
+                os.system(stopCommand)
             self.do_update()
-            logging.info('Update: starting gitea.service')
-            os.system("systemctl start gitea.service")
-            print("update successfully")
+            if self.config.get('Gitea', 'startCommand'):
+                startCommand = self.config.get('Gitea', 'startCommand')
+                logging.info('Update: starting gitea service via %s', startCommand)
+                os.system(startCommand)
+            print("update from {} to {} successfully".format(current_version, self.github_version))
         else:
-            print("current version is uptodate")
+            print("current version {} is uptodate".format(current_version))
 
 
 def updater(settings='settings.ini'):
